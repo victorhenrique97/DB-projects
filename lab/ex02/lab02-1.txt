@@ -1,0 +1,110 @@
+Victor Henrique de Souza Rodrigues - 9791027
+
+-- preparando a base
+
+select * from user_tables
+
+SELECT 'DROP TABLE '||TABLE_NAME||' CASCADE CONSTRAINTS;' FROM USER_TABLES;
+
+DROP TABLE TIME CASCADE CONSTRAINTS;
+DROP TABLE JOGA CASCADE CONSTRAINTS;
+DROP TABLE PARTIDA CASCADE CONSTRAINTS;
+DROP TABLE JOGADOR CASCADE CONSTRAINTS;
+DROP TABLE POSICAOJOGADOR CASCADE CONSTRAINTS;
+DROP TABLE DIRETOR CASCADE CONSTRAINTS;
+DROP TABLE UNIFORME CASCADE CONSTRAINTS;
+
+-- rodei o comando esquema futebol sql
+
+-- inserindo valores
+
+INSERT INTO TIME(NOME, ESTADO, TIPO, SALDO_GOLS) VALUES ('Corinthians', 'SP', 'profissional', 10);
+INSERT INTO TIME(NOME, ESTADO, TIPO, SALDO_GOLS) VALUES ('Palmeiras', null, 'profissional', 1);
+INSERT INTO TIME VALUES ('Santos', 'sp', 'profissional', 0);
+
+INSERT INTO JOGA VALUES('Corinthians', 'Palmeiras', 'S');
+INSERT INTO JOGA VALUES('Santos', 'Palmeiras', 'S');
+
+INSERT INTO PARTIDA VALUES ('Corinthians', 'Palmeiras', TO_DATE('23-05-2018', 'DD-MM-YYYY'), DEFAULT, 'Corinthians');
+INSERT INTO PARTIDA VALUES ('Santos', 'Palmeiras', TO_DATE('21-05-2018', 'DD-MM-YYYY'), '0X0', 'Santos');
+
+INSERT INTO JOGADOR (CPF, RG, NOME, DATA_NASC, NATURALIDADE) VALUES ('AAAAAAA', '11.417.717-3', 'Julinho', null, null); -- erro por nao conter o time
+INSERT INTO JOGADOR (CPF, RG, NOME, TIME) VALUES ('AAAAAAA', '11.417.717-3', 'Julinho', 'Fluminense'); -- erro no cpf
+INSERT INTO JOGADOR (CPF, RG, NOME, TIME) VALUES ('444.999.444-77', '11.417.717-3', 'Julinho', 'Fluminense'); -- erro de SK
+INSERT INTO JOGADOR (CPF, RG, NOME, TIME) VALUES ('444.999.444-77', '11.417.717-3', 'Julinho', 'Corinthians');
+INSERT INTO JOGADOR (CPF, RG, NOME, DATA_NASC, NATURALIDADE, TIME) VALUES ('444.919.444-77', '11.457.717-3', 'Rodriguinho', TO_DATE('21-05-1990', 'DD-MM-YYYY'), null ,'Palmeiras');
+INSERT INTO JOGADOR VALUES ('444.919.444-11', '11.257.717-3', 'Matheuszinho', TO_DATE('01-01-1990', 'DD-MM-YYYY'), 'Brasileiro' ,'Santos');
+
+INSERT INTO POSICAO_JOGADOR VALUES ('444.999.444-77', 'Reserva');
+INSERT INTO POSICAO_JOGADOR VALUES ('444.919.444-77', 'Goleiro');
+INSERT INTO POSICAO_JOGADOR VALUES ('444.919.444-77', null); -- erro atributo que nao pode ser nulo sendo nulo
+INSERT INTO POSICAO_JOGADOR VALUES ('123.456.789-10','Atacante'); -- erro de SK
+INSERT INTO POSICAO_JOGADOR VALUES ('444.919.444-11', 'Zagueiro');
+
+INSERT INTO DIRETOR VALUES ('Corinthians', 'Victor');
+INSERT INTO DIRETOR VALUES ('Palmeiras', 'Ze');
+
+INSERT INTO UNIFORME (TIME, TIPO) values ('Corinthians', 'Reserva');
+INSERT INTO UNIFORME (TIME, TIPO) values ('Corinthians', 'ALTERN'); -- ERRO DE SK
+INSERT INTO UNIFORME (TIME, TIPO, COR_PRINCIPAL) values ('Corinthians', 'Titular', 'Preto');
+INSERT INTO UNIFORME (TIME, TIPO, COR_PRINCIPAL) values ('Palmeiras', 'Titular', 'Verde');
+
+INSERT INTO TIME(NOME, ESTADO, SALDO_GOLS) VALUES ('Sao Paulo', 'SP', 10); -- nesse caso, ele nao coloccou nada no tipo pois nao havia restricao de ser nulo
+
+INSERT INTO PARTIDA VALUES ('Corinthians', 'Palmeiras', TO_DATE('23-02-2018', 'DD-MM-YYYY'), NULL, 'Corinthians'); -- ele permitiu a insercao com o valor nulo e deixou nulo no campo placar
+
+INSERT INTO PARTIDA (TIME1, TIME2, DATA, LOCAL) VALUES ('Corinthians', 'Palmeiras', TO_DATE('23-08-2018', 'DD-MM-YYYY'), 'Corinthians'); -- ele permite a insercao e coloca o default nesse caso
+
+UPDATE TIME SET NOME = 'SCCP' WHERE NOME = 'Corinthians'; --  Ocorre erro pois o oracle nao permite fazer o update em uma chave primaria que eh referenciada. 
+
+UPDATE TIME SET ESTADO = 'SP' WHERE NOME = 'Palmeiras'; -- ele permitiu a alteracao pois o atributo nao eh chave, e nao esta sendo referenciado.
+
+UPDATE JOGADOR SET TIME = 'Corinthians' WHERE NOME = 'Matheuszinho' -- ele permitiu a alteracao pois o time corinthians consta na base
+
+UPDATE JOGADOR SET TIME = 'Brasil' WHERE NOME = 'Matheuszinho' -- deu erro pois nao havia uma referencia para brasil na tabela de times
+
+DELETE FROM TIME WHERE NOME = 'Corinthians' -- ele removeu o Corinthians da tabela de time, da tabela joga e partida, e quaisquer jogadores e diretores, que estivesse associados ao Corinthians, alem dos uniformes que estavam relacioados com o Corinthians logo o depois todas as tuplas que tinham relacao com o corinthians foram removidas.
+
+-- parte relacionada ao script de dados ja inseridos
+
+SELECT * FROM TIME; -- Q1
+
+SELECT NOME , SALDO_GOLS FROM TIME WHERE (UPPER(TIPO) = 'AMADOR' AND UPPER(ESTADO) like 'SP'); -- Q2
+
+SELECT CPF, NOME, NATURALIDADE, TIME FROM JOGADOR; -- Q3
+
+SELECT DATA, LOCAL FROM PARTIDA WHERE (TIME1 = 'PALMEIRAS' OR TIME2 = 'PALMEIRAS'); -- Q4
+SELECT TO_CHAR(DATA, 'DDMMYYYY'), LOCAL FROM PARTIDA WHERE (TIME1 = 'PALMEIRAS' OR TIME2 = 'PALMEIRAS'); -- usando o to char
+SELECT TO_DATE(DATA, 'MM/DD/YY'), LOCAL FROM PARTIDA WHERE (TIME1 = 'PALMEIRAS' OR TIME2 = 'PALMEIRAS'); -- usando o to date
+
+SELECT * FROM JOGADOR, TIME; -- nesse caso ele fez as combinacoes de todos para todos ex se tem 2 times A e B e 3 jogadores 1 2 3 ele retornou A1 A2 A3 B1 B2 B3. (nao copiei a tabela para ca pois ficaria mt grande) - Q5
+SELECT * FROM JOGADOR J , TIME T WHERE J.TIME = T.NOME; -- ele retornou apenas os jogadores e os dados dos times nos quais o jogador joga, ex jogador A joga no time 1 ele retorna A1 e nao A2 e A3 como ocorreu na linha de cima.
+SELECT J.CPF, J.NOME, J.DATA_NASC, T.NOME, T.ESTADO FROM JOGADOR J , TIME T WHERE J.TIME = T.NOME; -- da tabela de cima ele retorna apenas os atributos selecionados.
+
+SELECT J.CPF, J.NOME, J.DATA_NASC, J.TIME FROM TIME T , JOGADOR J WHERE (UPPER(T.ESTADO) = 'SP' AND T.NOME = J.TIME); -- Q6
+SELECT J.CPF, J.NOME, J.DATA_NASC, J.TIME FROM JOGADOR J JOIN TIME T ON (UPPER(T.ESTADO) = 'SP' AND T.NOME = J.TIME);
+
+SELECT T.NOME, T.ESTADO, D.NOME FROM TIME T, DIRETOR D WHERE T.NOME = D.TIME; -- Q7
+
+SELECT T.NOME, U.COR_PRINCIPAL FROM TIME T, UNIFORME U WHERE (T.NOME = U.TIME AND UPPER(T.ESTADO) = 'MG' AND UPPER(T.TIPO) = 'PROFISSIONAL'); -- Q8
+
+SELECT J.NOME, J.NATURALIDADE, T.NOME, T.ESTADO, PJ.POSICAO FROM TIME T, JOGADOR J, POSICAO_JOGADOR PJ WHERE (T.NOME = J.TIME AND PJ.JOGADOR = J.CPF); -- Q9
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
